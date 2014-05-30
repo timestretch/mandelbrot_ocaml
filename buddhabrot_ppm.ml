@@ -2,14 +2,17 @@
  * OCaml Buddhabrot - PPM bitmap generator.
  * By Erik Wrenholt 2014-05-29 
  * License: Public Domain
+ * 
+ * To Execute: time ocaml buddhabrot_ppm.ml > buddha.ppm
+ * Photoshop can open the generated PPM file.
  *)
 
 let max_iterations = 1024;;
 let bailout = 16.0;;
-let image_size = 512;;
-let samples_per_pixel = 32;;
+let image_size = 1024;;
+let samples_per_pixel = 8;;
 let max_pixel = ref 0;;
-let radius = 1.0;;
+let radius = 2.0;;
 
 (* matrix holds the 'hit-count' for each pixel *)
 let fractal_data = Array.make_matrix image_size image_size 0;;
@@ -33,6 +36,7 @@ let mandelbrot cr ci =
   iterate 0 0. 0.
 ;;
 
+(* Scale from local coordinates to bitmap, then increment pixel value *)
 let plot_pixel (ax : float) (ay : float) = 
   let scale_val n = 
 	int_of_float ((n /. (radius *. 2.0)) *. (float_of_int image_size) +. (float_of_int image_size) /. 2.0) in
@@ -49,47 +53,43 @@ let plot_pixel (ax : float) (ay : float) =
 	fractal_data.(py).(px) <- current_value + 1;
 ;;
 
-let render_fractal_size = 
+(* Generate random points and calc fractal *)
+let calc_fractal = 
+  let random_float = (fun () -> (Random.float (radius *. 2.0)) -. radius) in
+  let pixel_samples = image_size * image_size * samples_per_pixel in
 
-  let calc_fractal = 
-	let random_float = (fun () -> (Random.float (radius *. 2.0)) -. radius) in
-	let pixel_samples = image_size * image_size * samples_per_pixel in
+  for i=0 to pixel_samples do
+	let cr = random_float () in
+	let ci = random_float () in
+	let iterations = (mandelbrot ci cr) in
 
-	for i=0 to pixel_samples do
-	  let cr = random_float () in
-	  let ci = random_float () in
-	  let iterations = (mandelbrot ci cr) in
+	if iterations != max_iterations then
 
-	  if iterations != max_iterations then
-
-		for i = 0 to iterations-1 do
-		  let tx = snd iteration_list.(i) in
-		  let ty = fst iteration_list.(i) in
-		  plot_pixel tx ty;
-		done;
-
-	done in
-
-  let render_fractal = 
-
-	print_string "P6\n";
-	Printf.printf ("%d %d\n") image_size image_size;
-	print_string "255\n";
-
-	for y = 0 to image_size-1 do
-	  for x = 0 to image_size-1 do
-		let iterations = fractal_data.(y).(x) in
-		let gray = char_of_int (int_of_float (((float_of_int iterations) /. (float_of_int !max_pixel)) *. 255.0))  in
-		print_char gray;
-		print_char gray;
-		print_char gray;
+	  for i = 0 to iterations-1 do
+		let tx = snd iteration_list.(i) in
+		let ty = fst iteration_list.(i) in
+		plot_pixel tx ty;
 	  done;
-	done in
-	
-	calc_fractal;
-	render_fractal;
+  done
 ;;
 
+(* Generate a ppm file from pixel data. Scale each pixel to 'max_pixel' *)
+let plot_fractal = 
+  print_string "P6\n";
+  Printf.printf ("%d %d\n") image_size image_size;
+  print_string "255\n";
+
+  for y = 0 to image_size-1 do
+	for x = 0 to image_size-1 do
+	  let iterations = fractal_data.(y).(x) in
+	  let gray = char_of_int (int_of_float (((float_of_int iterations) /. (float_of_int !max_pixel)) *. 255.0))  in
+	  print_char gray;
+	  print_char gray;
+	  print_char gray;
+	done;
+  done
+;;
 
 let () = 
-  render_fractal_size;;
+	calc_fractal;
+	plot_fractal;;

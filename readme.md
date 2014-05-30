@@ -18,6 +18,20 @@ Optimizing Compiler:
 	ocamlopt mandelbrot_ppm.ml -o mandelbrot_ppm_opt;
 	time ./mandelbrot_ppm_opt > output.ppm
 
+Buddhabrot Example
+-
+
+I added a Buddhabrot generator. To run it with bytecode compiler:
+
+	time ocaml buddhabrot_ppm.ml > buddhabrot.ppm
+
+Optimizing Compiler:
+
+	ocamlopt buddhabrot_ppm.ml -o buddhabrot_ppm_opt;
+	time ./buddhabrot_ppm_opt > output.ppm
+	
+![Buddhabrot Example Image](/buddhabrot.png "Buddhabrot Example")
+
 License: Public Domain
 
 Erik Wrenholt 2014-01-14
